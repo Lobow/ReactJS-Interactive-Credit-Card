@@ -1,30 +1,39 @@
 "use client";
 
 import * as React from 'react';
-import { Grid, Box, Button, styled, TextField, OutlinedInput, InputLabel } from '@mui/material';
+import { Box, Button, styled, Modal, OutlinedInput, InputLabel } from '@mui/material';
 import CreditCard from './components/credit-card'
-
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export default function Home() {
 
-  const [cardHolder, setCardHolder] = React.useState("");
-  const [cardNumber, setCardNumber] = React.useState("");
-  const [expMonth, setExpMonth] = React.useState("");
-  const [expYear, setExpYear] = React.useState("");
-  const [cvc, setCvc] = React.useState("");
+  const [formInfo, setFormInfo] = React.useState({ cardHolder: '', cardNumber: '', expMonth: '', expYear: '', cvc: '' })
   const [cvcClick, setCvcClick] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [disabledBtn, setDisabledBtn] = React.useState(true);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
+  React.useEffect(() => {
+    activeConfirmBtn();
+  }, [formInfo])
+
+  const activeConfirmBtn = () => {
+    if (Object.values(formInfo).every(item => item !== '')) {
+      setDisabledBtn(false);
+    } else {
+      setDisabledBtn(true);
+    }
+  }
+  const handleChange = (e) => {
+    setFormInfo(form => ({ ...form, ...{ [e.target.name]: e.target.value } }));
+  }
 
   return (
     <section>
+      
       <div style={styles.leftBg}>
-        <CreditCard cvcClick={cvcClick} cardInfo={{
-          name: cardHolder,
-          number: cardNumber,
-          month: expMonth,
-          year: expYear,
-          cvc: cvc
-        }} />
+        <CreditCard cvcClick={cvcClick} cardInfo={formInfo} />
       </div>
 
       <Box component="form"
@@ -41,13 +50,13 @@ export default function Home() {
           display: 'grid',
           gap: '2vw'
         }}>
-
         <div>
           <InputLabel style={styles.inputLabel}>CARDHOLDER NAME</InputLabel>
           <OutlinedInput
             style={styles.outlinedInput}
             placeholder="e.g. Jake Neverland"
-            onChange={e => setCardHolder(e.target.value)}
+            name='cardHolder'
+            onChange={e => handleChange(e)}
             inputProps={{ maxLength: 28 }}
           />
         </div>
@@ -57,7 +66,8 @@ export default function Home() {
           <OutlinedInput
             style={styles.outlinedInput}
             placeholder="e.g. 0000 0000 0000 0000"
-            onChange={e => setCardNumber(e.target.value)}
+            name='cardNumber'
+            onChange={e => handleChange(e)}
             inputProps={{ maxLength: 16 }}
           />
         </div>
@@ -68,36 +78,70 @@ export default function Home() {
               <OutlinedInput
                 style={styles.outlinedInputBottom}
                 placeholder="MM"
-                onChange={e => setExpMonth(e.target.value)}
+                name='expMonth'
+                onChange={e => handleChange(e)}
                 inputProps={{ maxLength: 2, max: 12 }}
-
               />
               <OutlinedInput style={styles.outlinedInputBottom}
                 placeholder="YY"
-                onChange={e => setExpYear(e.target.value)}
+                name='expYear'
+                onChange={e => handleChange(e)}
                 inputProps={{ maxLength: 2 }}
               />
             </div>
-
           </div>
           <div style={styles.cvcStyle}>
             <InputLabel style={styles.inputLabel}>CVC</InputLabel>
             <OutlinedInput style={styles.outlinedInput}
               placeholder="e.g. 123"
-              onChange={e => setCvc(e.target.value)}
+              name='cvc'
+              onChange={e => handleChange(e)}
               onFocus={() => setCvcClick(true)}
               onBlur={() => setCvcClick(false)}
               inputProps={{ maxLength: 3 }}
-
             />
           </div>
         </div>
-
-        <ConfirmButton variant="contained">Confirm</ConfirmButton>
+        <ConfirmButton disabled={disabledBtn} onChange={activeConfirmBtn} onClick={handleOpen} variant="contained">Confirm</ConfirmButton>
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="parent-modal-title"
+          aria-describedby="parent-modal-description"
+        >
+          <Box sx={{ ...style, width: '50vw' }}>
+            <CheckCircleIcon style={{
+              color: '#2b1649',
+              width: '10vw',
+              height: '10vw'
+            }} />
+            <h2 id="parent-modal-title" style={styles.thanksLabel}>THANK YOU!</h2>
+            <p id="parent-modal-description" style={styles.thanksDetailLabel}>
+              We've added your card details.
+            </p>
+            <ConfirmButton onClick={handleClose} variant="contained">Continue</ConfirmButton>
+          </Box>
+        </Modal>
       </Box>
     </section>
   )
 }
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  pt: 2,
+  px: 4,
+  pb: 3,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '2vw'
+};
 
 const ConfirmButton = styled(Button)({
   backgroundColor: '#2b1649 !important',
@@ -118,6 +162,12 @@ const ConfirmButton = styled(Button)({
     backgroundColor: '#0062cc',
     borderColor: '#005cbf',
   },
+  '&.Mui-disabled': {
+    boxShadow: 'none',
+    backgroundColor: '#806c91 !important',
+    borderColor: '#FFFFF',
+    color: 'white !important'
+  }
 })
 
 
@@ -147,7 +197,7 @@ const styles = {
   leftBg: {
     height: '100%',
     width: '40%',
-    background: 'linear-gradient(90deg, #2b1649 52%, #571255 69%, #2b1649 100%);',
+    background: 'linear-gradient(20deg, #22123f 16%,#894343 77%, #bf4747 85%, #9f9654 100%)',
     position: 'absolute'
   },
   bottomInfo: {
@@ -182,5 +232,18 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'center',
     width: '15vw'
+  },
+
+  thanksLabel: {
+    fontFamily: 'monospace',
+    fontWeight: '800',
+    color: '#4F1D95',
+    fontSize: '4vw'
+  },
+  thanksDetailLabel: {
+    fontFamily: 'monospace',
+    color: '#838383',
+    fontSize: '2vw'
   }
+
 }
